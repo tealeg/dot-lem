@@ -9,15 +9,12 @@
 (define-key *global-keymap* "C-x u" 'undo)
 (setf *scroll-recenter-p* nil)
 
-
-
-
-
-
 (let ((asdf:*central-registry* (cons #P"~/.lem/" asdf:*central-registry*)))
   (ql:quickload :lem-tealeg-init)
-  (ql:quickload :lem-tealeg-org-mode)
+
   (ql:quickload :lem-tealeg-modeline-clock)
+  (ql:quickload :lem-tealeg-org-mode)
+
   (ql:quickload :lem-modeline-battery))
 
 (lem-modeline-battery:enable)
