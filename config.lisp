@@ -1,2 +1,0 @@
-
-(:ISEARCH-PREVIOUS-STRING "o")
