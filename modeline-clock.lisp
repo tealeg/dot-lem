@@ -6,11 +6,6 @@
 
 (in-package :lem-tealeg-modeline-clock)
 
-(defvar tealeg-day-names
-     '("Monday" "Tuesday" "Wednesday"
-       "Thursday" "Friday" "Saturday"
-       "Sunday"))
-
 (defun modeline-clock (window)
   (declare (ignore window))
   (multiple-value-bind 
@@ -27,9 +22,6 @@
                           year)
                           nil
                           :right))))
-
-;; (defun cause-redraw ()
-;;   (window-redraw (current-window) t))
 
 (defvar modeline-clock-timer
   (sb-ext:make-timer #'lem:redraw-display)
