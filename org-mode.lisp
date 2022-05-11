@@ -1,13 +1,37 @@
+
 (defpackage :lem-tealeg-org-mode
   (:use :cl
         :lem
-        :lem.language-mode)
+        :lem.language-mode
+        :lem.language-mode-tools
+)
   (:export :*org-mode-hook*))
 (in-package :lem-tealeg-org-mode)
 
+
+(lem:define-attribute syntax-org-heading
+  (:light :foreground "#ff00ff")
+  (:dark :foreground "LightSteelBlue"))
+
+(lem:define-attribute syntax-org-inline-code
+  (t :background "#888888" :foreground "#ff0000"))
+
+(lem:define-attribute syntax-org-bold
+  (t :bold-p t))
+
+(lem:define-attribute syntax-org-bold
+  (t :italic-p t))
+
+
 (defun make-tmlanguage-org ()
   (let* ((patterns (make-tm-patterns
-                    (make-tm-match "^\\*+ " :name 'syntax-constant-attribute)
+                    (make-tm-match "^\\*+.*$" :name 'syntax-org-heading)
+                    (make-tm-string-region "=" :name 'syntax-org-inline-code)
+                    (make-tm-string-region "*" :name 'syntax-org-bold)
+                    (make-tm-string-region "/" :name 'syntax-org-italic)
+
+
+
                     ;; (make-tm-match "=.*=" :name 'syntax-string-attribute)
                     ;; (make-tm-region '(:sequence "#+(BEGIN|begin)")
                     ;;                 '(:sequence "#+(END|end)")
