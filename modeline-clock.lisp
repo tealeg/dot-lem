@@ -18,18 +18,17 @@
   (declare (ignore window))
   (apply #'values (list (local-time:format-timestring nil (local-time:now) :format lem-user::*modeline-clock-format*) nil :right)))
 
-(defvar modeline-clock-timer
-  (sb-ext:make-timer #'lem:redraw-display)
+(defvar *modeline-clock-timer* nil
   "A timer to make the modeline redraw periodically, instead of just on activity")
 
 (defun enable ()
-  (sb-ext:schedule-timer modeline-clock-timer 1 :repeat-interval 1)
+  (lem:start-timer 1000 t #'lem:redraw-display nil "modeline clock timer")
   (modeline-add-status-list 'modeline-clock))
 
 
 (defun disable () 
-  (when (sb-ext:timer-scheduled-p modeline-clock-timer)
-      (sb-ext:unschedule-timer modeline-clock-timer))
+  (when *modeline-clock-timer*
+    (lem:stop-timer *modeline-clock-timer*))
   (modeline-remove-status-list 'modeline-clock))
 
 
