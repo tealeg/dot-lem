@@ -1,3 +1,4 @@
+;; This is very much a work in progress!  Nowhere near ready for use yet.
 
 (defpackage :lem-tealeg-org-mode
   (:use :cl
