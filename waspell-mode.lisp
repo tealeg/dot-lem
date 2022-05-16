@@ -29,11 +29,71 @@
 )
 
 
+(defun empty-string-p (s)
+  (= (length (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout) s)) 0))
+
+(defun non-spellable-char-p (c)
+  (member c '(#\Space
+              #\Newline
+              #\Backspace
+              #\Tab 
+              #\Linefeed
+              #\Page 
+              #\Return
+              #\Rubout
+              #\"
+              #\'
+              #\!
+              #\@
+              #\#
+              #\$
+              #\%
+              #\^
+              #\&
+              #\*
+              #\-
+              #\=
+              #\_
+              #\+
+              #\\
+              #\|
+              #\`
+              #\~
+              #\;
+              #\:
+              #\,
+              #\.
+              #\<
+              #\>
+              #\/
+              #\?
+              #\( 
+              #\)
+              #\[
+              #\]
+              #\{
+              #\}
+              #\0
+              #\1
+              #\2
+              #\3
+              #\4
+              #\5
+              #\6
+              #\7
+              #\8
+              #\9)))
+
+
+(defun spellable-char-p (c)
+  (not (non-spellable-char-p c)))
+
+
 (defun current-word (point)
   (with-point ((cur point)
                (end point))
-    (skip-symbol-backward cur)
-    (skip-symbol-forward end)
+    (skip-chars-backward cur #'spellable-char-p)
+    (skip-chars-forward end #'spellable-char-p)
     (points-to-string cur end)))
 
 
@@ -45,15 +105,12 @@
          (let ((words (dict-suggest lang word)))
            (with-point ((start point)
                         (end point))
-             (skip-chars-backward start #'syntax-symbol-char-p)
+             (skip-chars-backward start #'non-spellable-char-p)
              (mapcar (lambda (word)
                        (lem.completion-mode:make-completion-item :label word
                                                                  :start start
                                                                  :end end))
                      words)))))))))
-
-(defun empty-string-p (s)
-  (= (length (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout) s)) 0))
 
 (defun scan-spelling (start end)
   (with-point ((p1 start)
@@ -64,14 +121,13 @@
     (mapc #'delete-overlay *waspell-overlays*)
     (with-dict (lang *waspell-language* *waspell-broker*)
       (loop :while (point< p1 end)
-            :do (skip-whitespace-forward p2)
+            :do (skip-chars-forward p2 #'non-spellable-char-p)
                 (move-point p1 p2)
-                (skip-chars-forward p2 (lambda (c) (not (syntax-space-char-p c))))
+                (skip-chars-forward p2 #'spellable-char-p)
                 (let ((word (points-to-string p1 p2)))
                   (unless (or (empty-string-p word) (dict-check lang word))
                     (push (make-overlay p1 p2 'incorrect-spelling-attribute)
                           *waspell-overlays*))
-                    ;; do something
               )))))
 
 
