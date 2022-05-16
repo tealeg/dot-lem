@@ -20,8 +20,10 @@
 (lem:define-attribute syntax-org-bold
   (t :bold-p t))
 
-(lem:define-attribute syntax-org-bold
-  (t :italic-p t))
+
+(lem:define-attribute syntax-org-italic
+  (t :background "cyan"))
+
 
 
 (defun make-tmlanguage-org ()
