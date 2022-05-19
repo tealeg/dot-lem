@@ -18,11 +18,12 @@
   (ql:quickload :lem-tealeg-modeline-clock)
   (ql:quickload :lem-tealeg-org-mode)
 
-  (ql:quickload :lem-tealeg-waspell-mode)
+  ;; (ql:quickload :lem-tealeg-waspell-mode)
   
   (ql:quickload :lem-modeline-battery)
 
   (ql:quickload :lem-paredit-mode)
+  (ql:quickload :lem-tealeg-vale)
   )
 
 (lem-modeline-battery:enable)
@@ -30,5 +31,4 @@
 
 (lem:load-theme "emacs-light")
 
-;; (add-hook lem-lisp-mode:*lisp-mode-hook* #'lem-paredit-mode:paredit-mode)
 

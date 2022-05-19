@@ -1,4 +1,4 @@
-;; Work in progress - you can spellcheck a word allready, in en_GB, but that's it
+;; Work in progress - Don't use this, its really buggy
 
 (defpackage :waspell
   (:use :cl :lem :lem-base :enchant)
@@ -7,18 +7,19 @@
 
 (in-package :waspell)
 
-(define-minor-mode waspell-mode 
-    (:keymap *waspell-mode-keymap*
-     :name "waspell"))
+(defvar *waspell-mode-keymap* (make-keymap :name '*waspell-mode-keymap*
+                                           :parent *global-keymap*))
 
-(defvar non-spellable-chars '(#\Space
-              #\Newline
-              #\Backspace
-              #\Tab 
-              #\Linefeed
-              #\Page 
-              #\Return
-              #\Rubout
+
+(defvar non-spellable-chars '(
+                              (#\Space . "Space")
+                              (#\Newline . nil)
+                              #\Backspace
+                              (#\Tab  . "Tab")
+                              (#\Linefeed . nil)
+                              (#\Page . nil)
+                              (#\Return . "Return")
+                              (#\Rubout . nil)
               #\"
               #\'
               #\!
@@ -63,10 +64,7 @@
               #\9)
   "The list of all chars that we cannot spellcheck on ")
 
-;; (mapc (lambda (c) (define-key *waspell-mode-keymap* (string c) 'waspell-check-last-word)) non-spellable-chars)
-
-
-(defvar *waspell-overlays* '())
+(defvar *waspell-overlays* (make-hash-table))
 
 (define-attribute incorrect-spelling-attribute
   (t :background "red"))
@@ -81,38 +79,55 @@
 (defun empty-string-p (s)
   (= (length (string-trim '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout) s)) 0))
 
-(defun non-spellable-char-p (c)
-  (member c non-spellable-chars))
+(defun non-spellable-char-p (chr)
+  (labels ((nsc-p (c lst) 
+                  (if lst
+                      (let ((elt (car lst))
+                            (rest (cdr lst)))
+                        (or (eq c elt) 
+                            (and (consp elt) (eq c (car elt)))
+                            (nsc-p c rest)))
+                      lst)))
+    (nsc-p chr non-spellable-chars)))
 
 
 (defun spellable-char-p (c)
   (not (non-spellable-char-p c)))
 
+(defun point-to-key (point) 
+  (format nil "~s" point))
 
 (defun current-word (point)
   (with-point ((cur point)
                (end point))
-    (if (non-spellable-char-p (character-at cur))
-        (skip-chars-backward cur #'non-spellable-char-p) 
-        (skip-chars-forward cur #'spellable-char-p))
+    (when (non-spellable-char-p (character-at cur))
+        (skip-chars-backward cur #'non-spellable-char-p))
     (move-point end cur)
     (skip-chars-backward cur #'spellable-char-p)
     (values (points-to-string cur end) cur end)))
 
 
 (define-command waspell-check-last-word () ()
-  (mapc #'delete-overlay *waspell-overlays*)
-  (multiple-value-bind (word start end) (current-word (current-point))
+  (with-point ((cp (current-point)))
+    (let ((c (insertion-key-p (last-read-key-sequence))))
+      (insert-character cp c))
+  (multiple-value-bind (word start end) (current-word cp)
+    (message "checking word ~a" word)
     (with-dict (lang *waspell-language* *waspell-broker*)
-      (unless (dict-check lang word)
-        (push (make-overlay start end 'incorrect-spelling-attribute)
-              *waspell-overlays*)))))
-        
+      (let* ((key (point-to-key start))
+             (ov (gethash key *waspell-overlays*)))
+        (if (dict-check lang word)
+            (and ov (delete-overlay ov) (remhash key *waspell-overlays*))
+            (setf (gethash key *waspell-overlays*)
+              (make-overlay start end 'incorrect-spelling-attribute))))))))
+
 
 (define-command waspell-word-at-point () () 
-  (mapc #'delete-overlay *waspell-overlays*)
   (lem.completion-mode:run-completion (lambda (point)
                                         (multiple-value-bind (word start end) (current-word point)
+                                          (let* ((key (point-to-key start))
+                                                 (ov (gethash key *waspell-overlays*)))
+                                            (and ov (delete-overlay ov) (remhash key *waspell-overlays*)))
                                           (with-dict (lang *waspell-language* *waspell-broker*)
                                             (unless (dict-check lang word)
                                               (let ((words (dict-suggest lang word)))
@@ -141,15 +156,17 @@
 ;;                           *waspell-overlays*))
 ;;               )))))
 
+(define-minor-mode waspell-mode 
+    (:name "waspell"
+     :keymap *waspell-mode-keymap*))
 
-(define-key  *waspell-mode-keymap* #\Space 'waspell-check-last-word)
-(loop for k in non-spellable-chars 
-      do (define-key *waspell-mode-keymap* k 'waspell-check-last-word))
 
-;  ;; (add-hook  (variable-value 'after-syntax-scan-hook :global)
-  ;;           'scan-spelling))
 
-;; (defun disable ()
-;; )
-  ;; (remove-hook (variable-value 'after-syntax-scan-hook :global)
-  ;;              'scan-spelling))
+;; (loop for k in non-spellable-chars 
+;;        do (progn 
+;;             (if (consp k)
+;;                 (unless (null (cdr k))
+;;                   (define-key *waspell-mode-keymap* (cdr k) 'waspell-check-last-word))
+;;                 (define-key *waspell-mode-keymap* (string k) 'waspell-check-last-word))
+;;             ))
+
