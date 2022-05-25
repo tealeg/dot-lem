@@ -1,5 +1,7 @@
 (defpackage :lem-tealeg-linkcheck
-  (:use :cl :lem :lem-tealeg-util)
+  (:use :cl
+        :lem
+        :lem-tealeg-util)
   (:export :linkcheck))
 
 (in-package :lem-tealeg-linkcheck)
@@ -16,8 +18,6 @@
                         (merge-pathnames
                          #P"linkcheck.sh"
                          proj-root))))
-      ;; (message proj-root)
-      ;; (message cmd)
       (uiop:run-program cmd
                         :ignore-error-status t
                         :directory proj-root
@@ -35,10 +35,8 @@
                            (list source line-number column target))
           :when result
           :collect it)))
-                                 
-(define-command linkcheck () () 
-  (let* ((buffer (current-buffer))
-         (notes (parse-linkcheck-output (run-linkcheck buffer))))
+
+(defun linkcheck-sourcelist (notes)
     (lem.sourcelist:with-sourcelist (sourcelist "*linkcheck*")
       (dolist (note notes)
         (destructuring-bind (source line-number column target) note
@@ -63,7 +61,15 @@
                     (point (buffer-point buf)))
                (move-to-line point line-number)
                (move-to-column point (1- column))
-               (funcall set-buffer-fn buf)))))))))
+               (funcall set-buffer-fn buf))))))))
+
+
+(define-command linkcheck () () 
+  (let* ((buffer (current-buffer))
+         (notes (parse-linkcheck-output (run-linkcheck buffer))))
+    (linkcheck-sourcelist notes)))
+
+
                
 
 
