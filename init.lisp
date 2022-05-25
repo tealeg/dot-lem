@@ -1,6 +1,7 @@
 (defpackage #:lem-tealeg-init
   (:use #:cl
-        #:lem))
+        #:lem)
+)
 
 (in-package :lem-tealeg-init)
 
@@ -13,6 +14,7 @@
 
 
 (let ((asdf:*central-registry* (cons #P"~/.lem/" asdf:*central-registry*)))
+  (ql:quickload :lem-tealeg-util)
   (ql:quickload :lem-tealeg-init)
 
   (ql:quickload :lem-tealeg-modeline-clock)
@@ -24,11 +26,11 @@
 
   (ql:quickload :lem-paredit-mode)
   (ql:quickload :lem-tealeg-vale)
+  (ql:quickload :lem-tealeg-linkcheck)
   )
 
 (lem-modeline-battery:enable)
 (lem-tealeg-modeline-clock:enable)
 
-(lem:load-theme "emacs-light")
-
+(lem:load-theme "emacs-dark")
 
